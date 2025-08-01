@@ -36,11 +36,19 @@ for (const [location, details] of Object.entries(packages)) {
     continue;
   }
 
-  // 3. Any remaining package should be a third-party dependency
-  //    and must have these fields.
-  if (!details.resolved || !details.integrity) {
-    invalidPackages.push(location);
+  // 3. Any remaining package should be a third-party dependency.
+  //    Registry packages must have "resolved" and "integrity" fields.
+  //    Git and file dependencies only need a "resolved" field.
+  if (details.resolved && details.integrity) {
+    continue;
   }
+  const isGitOrFileDep = details.resolved?.startsWith('git') || details.resolved?.startsWith('file:');
+  if (isGitOrFileDep) {
+    continue;
+  }
+
+  // Mark the left dependency as invalid.
+  invalidPackages.push(location);
 }
 
 if (invalidPackages.length > 0) {
